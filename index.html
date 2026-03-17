@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Прайс-лист</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh}
+
+/* Header */
+.header{background:#fff;border-bottom:1px solid #e8e8e8;padding:12px 16px;position:sticky;top:0;z-index:50}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-size:16px;font-weight:600;color:#1a1a1a}
+.status{font-size:11px;color:#888;font-weight:400}
+
+/* Price mode */
+.mode-bar{display:flex;gap:6px;margin-bottom:10px}
+.mode-btn{flex:1;padding:7px 4px;border-radius:8px;border:1px solid #e0e0e0;background:#fff;font-size:12px;font-weight:500;cursor:pointer;color:#888;transition:all .15s}
+.mode-btn.m-min  {background:#fff8e6;color:#b06f00;border-color:#f0c860}
+.mode-btn.m-rec  {background:#e8f4e8;color:#1a7a3a;border-color:#7ec87e}
+
+/* Search */
+.search-wrap{position:relative}
+.search-input{width:100%;padding:10px 14px 10px 38px;border-radius:10px;border:1.5px solid #e0e0e0;background:#f9f9f9;font-size:15px;color:#1a1a1a;outline:none;transition:border-color .15s}
+.search-input:focus{border-color:#4a90e2;background:#fff}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#aaa;pointer-events:none}
+.clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border:none;background:#ccc;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:12px;color:#fff;line-height:1}
+.clear-btn.visible{display:flex}
+
+/* Filter chips */
+.filter-wrap{padding:8px 16px;background:#fff;border-bottom:1px solid #f0f0f0;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.filter-wrap::-webkit-scrollbar{display:none}
+.chip{padding:4px 12px;border-radius:20px;border:1px solid #e0e0e0;background:#fff;font-size:12px;white-space:nowrap;cursor:pointer;color:#666;transition:all .15s;flex-shrink:0}
+.chip.active{background:#1a7a3a;color:#fff;border-color:#1a7a3a}
+.chip-all.active{background:#333;border-color:#333}
+
+/* Results bar */
+.results-bar{padding:8px 16px;font-size:12px;color:#888;background:#f5f5f5;border-bottom:1px solid #ebebeb}
+
+/* Cards */
+.cards{padding:8px 12px}
+.card{background:#fff;border-radius:12px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.07);cursor:pointer;transition:transform .1s,box-shadow .1s;display:flex;align-items:stretch}
+.card:active{transform:scale(0.98)}
+.card-accent{width:4px;flex-shrink:0}
+.card-body{flex:1;padding:10px 12px;min-width:0}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px}
+.card-name{font-size:13px;font-weight:500;line-height:1.4;color:#1a1a1a;flex:1}
+.card-sheet{font-size:10px;padding:2px 7px;border-radius:10px;background:#f0f0f0;color:#777;flex-shrink:0;font-weight:500}
+.card-art{font-size:11px;color:#aaa;margin-bottom:6px}
+.card-prices{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.price-tag{font-size:12px;padding:3px 8px;border-radius:6px;font-weight:500}
+.pt-base{background:#e8f0fe;color:#1a56cc}
+.pt-min {background:#fff8e6;color:#b06f00}
+.pt-rec {background:#e8f4e8;color:#1a7a3a}
+.pt-active-min{background:#f0a500;color:#fff}
+.pt-active-rec{background:#1a7a3a;color:#fff}
+.pt-active-base{background:#1a56cc;color:#fff}
+.price-main{font-size:14px;font-weight:600}
+
+/* Empty */
+.empty{text-align:center;padding:60px 20px;color:#aaa}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.empty-title{font-size:15px;font-weight:500;color:#777;margin-bottom:5px}
+.empty-sub{font-size:13px}
+
+/* Loading */
+.loading{text-align:center;padding:80px 20px;color:#aaa}
+.loader{width:36px;height:36px;border:3px solid #e0e0e0;border-top-color:#4a90e2;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:0 0 env(safe-area-inset-bottom,0);max-height:92vh;overflow-y:auto}
+.modal-handle{width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 0}
+.modal-img{width:100%;max-height:200px;object-fit:cover}
+.modal-img-ph{height:120px;background:linear-gradient(135deg,#f0f0f0,#e8e8e8);display:flex;align-items:center;justify-content:center;font-size:48px}
+.modal-content{padding:16px}
+.modal-sheet{font-size:11px;padding:2px 8px;border-radius:10px;background:#f0f0f0;color:#777;display:inline-block;margin-bottom:6px;font-weight:500}
+.modal-name{font-size:17px;font-weight:600;margin-bottom:4px;line-height:1.35}
+.modal-art{font-size:12px;color:#aaa;margin-bottom:4px}
+.modal-unit{font-size:12px;color:#888;margin-bottom:12px}
+.modal-desc{font-size:13px;color:#666;line-height:1.6;margin-bottom:14px;padding:10px 12px;background:#f9f9f9;border-radius:8px}
+.price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.price-card{border-radius:10px;padding:10px 8px;text-align:center}
+.pc-base{background:#e8f0fe}
+.pc-min {background:#fff8e6}
+.pc-rec {background:#e8f4e8}
+.pc-label{font-size:10px;font-weight:600;margin-bottom:4px;opacity:.8}
+.pc-base .pc-label{color:#1a56cc}
+.pc-min  .pc-label{color:#b06f00}
+.pc-rec  .pc-label{color:#1a7a3a}
+.pc-value{font-size:15px;font-weight:700}
+.pc-base .pc-value{color:#1a56cc}
+.pc-min  .pc-value{color:#b06f00}
+.pc-rec  .pc-value{color:#1a7a3a}
+.pc-none{font-size:13px;color:#ccc}
+.modal-close{width:calc(100% - 32px);margin:0 16px 16px;padding:13px;border-radius:10px;border:1.5px solid #e0e0e0;background:#fff;font-size:15px;cursor:pointer;color:#666;font-weight:500}
+.modal-close:active{background:#f5f5f5}
+
+/* Accent colors per sheet */
+.acc-Kerbl   {background:#4a90e2}
+.acc-Hanna   {background:#e2844a}
+.acc-Ohaus   {background:#7a5af8}
+.acc-Gerber  {background:#1a9a6a}
+.acc-Biosan  {background:#e24a7a}
+.acc-Hygiena {background:#e2c44a}
+.acc-Caiseley{background:#4ae2c4}
+.acc-LactoScan{background:#a05af8}
+.acc-XEMA    {background:#f87a5a}
+.acc-ZeuLab  {background:#5af87a}
+.acc-Wilie   {background:#5a9af8}
+.acc-Salutem {background:#f85a9a}
+.acc-pH      {background:#9af85a}
+.acc-FOSS    {background:#f8c45a}
+.acc-Unisensor{background:#5af8f8}
+.acc-LLG     {background:#b0b0b0}
+.acc-Сервис  {background:#888}
+.acc-default {background:#ccc}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">📦 Прайс-лист <span class="status" id="status-txt">загрузка...</span></div>
+  </div>
+  <div class="mode-bar">
+    <button class="mode-btn" id="btn-base" onclick="setMode('base')">💰 Базовая</button>
+    <button class="mode-btn m-min"  id="btn-min"  onclick="setMode('min')">📦 Минимальная</button>
+    <button class="mode-btn m-rec"  id="btn-rec"  onclick="setMode('rec')">⭐ Рекомендованная</button>
+  </div>
+  <div class="search-wrap">
+    <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3a6 6 0 100 12A6 6 0 009 3zM1 9a8 8 0 1114.32 4.906l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387A8 8 0 011 9z" clip-rule="evenodd"/></svg>
+    <input class="search-input" type="search" id="search" placeholder="Артикул, название, категория..." oninput="onSearch()" autocomplete="off" spellcheck="false">
+    <button class="clear-btn" id="clear-btn" onclick="clearSearch()">✕</button>
+  </div>
+</div>
+
+<div class="filter-wrap" id="filter-wrap">
+  <div class="chip chip-all active" onclick="setFilter('')" data-sheet="">Все</div>
+</div>
+
+<div class="results-bar" id="results-bar"></div>
+<div id="main"><div class="loading"><div class="loader"></div><div>Загрузка каталога...</div></div></div>
+
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div id="modal-body"></div>
+    <button class="modal-close" onclick="closeModal()">Закрыть</button>
+  </div>
+</div>
+
+<script>
+let ALL = [], filtered = [], mode = 'base', filterSheet = '';
+const PAGE = 60;
+let page = 0, rendering = false;
+
+const SHEET_COLORS = {
+  Kerbl:'#4a90e2',Hanna:'#e2844a',Ohaus:'#7a5af8',Gerber:'#1a9a6a',
+  Biosan:'#e24a7a',Hygiena:'#d4a800',Caiseley:'#0bb8a0',LactoScan:'#a05af8',
+  XEMA:'#f87a5a',ZeuLab:'#1aa83a',Wilie:'#5a9af8',Salutem:'#f85a9a',
+  'pH метры':'#6ab820','FOSS':'#e09820',Unisensor:'#00bcd4',LLG:'#999',Сервис:'#888'
+};
+
+function fmt(n) {
+  if (n == null || n === '') return null;
+  return parseFloat(n).toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+}
+
+function getPrice(p) {
+  if (mode === 'min') return p.mp ?? p.p ?? p.rp;
+  if (mode === 'rec') return p.rp ?? p.p ?? p.mp;
+  return p.p ?? p.mp ?? p.rp;
+}
+
+function accentColor(sh) {
+  return SHEET_COLORS[sh] || '#bbb';
+}
+
+function renderCard(p) {
+  const price = getPrice(p);
+  const priceStr = fmt(price) || '—';
+  const color = accentColor(p.sh);
+  const ptClass = mode==='min' ? 'pt-active-min' : mode==='rec' ? 'pt-active-rec' : 'pt-active-base';
+  return `<div class="card" onclick='openModal(${p.id})'>
+    <div class="card-accent" style="background:${color}"></div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-name">${p.n}</div>
+        <span class="card-sheet">${p.sh}</span>
+      </div>
+      ${p.a ? `<div class="card-art">Арт: ${p.a}${p.u ? ' · ' + p.u : ''}</div>` : (p.u ? `<div class="card-art">${p.u}</div>` : '')}
+      <div class="card-prices">
+        <span class="price-tag price-main ${ptClass}">${priceStr}</span>
+        ${p.p != null && mode!=='base' ? `<span class="price-tag pt-base">${fmt(p.p)}</span>` : ''}
+        ${p.mp != null && mode!=='min' ? `<span class="price-tag pt-min">${fmt(p.mp)}</span>` : ''}
+        ${p.rp != null && mode!=='rec' ? `<span class="price-tag pt-rec">${fmt(p.rp)}</span>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderBatch() {
+  if (rendering) return;
+  rendering = true;
+  const container = document.getElementById('main');
+  const start = page * PAGE;
+  const batch = filtered.slice(start, start + PAGE);
+  if (start === 0) {
+    container.innerHTML = '';
+    if (!batch.length) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Ничего не найдено</div><div class="empty-sub">Попробуйте другой запрос или артикул</div></div>`;
+      rendering = false; return;
+    }
+    const div = document.createElement('div');
+    div.className = 'cards';
+    div.id = 'cards';
+    container.appendChild(div);
+  }
+  const cards = document.getElementById('cards');
+  batch.forEach(p => { cards.insertAdjacentHTML('beforeend', renderCard(p)); });
+  page++;
+  rendering = false;
+}
+
+window.addEventListener('scroll', () => {
+  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 400) {
+    if (page * PAGE < filtered.length) renderBatch();
+  }
+});
+
+function doSearch() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const base = filterSheet ? ALL.filter(p => p.sh === filterSheet) : ALL;
+  if (!q) {
+    filtered = base;
+  } else {
+    filtered = base.filter(p =>
+      p.n.toLowerCase().includes(q) ||
+      (p.a && p.a.toLowerCase().includes(q)) ||
+      (p.sh && p.sh.toLowerCase().includes(q))
+    );
+  }
+  const bar = document.getElementById('results-bar');
+  bar.textContent = q ? `Найдено: ${filtered.length} из ${base.length}` : `Товаров: ${ALL.length} · Показаны первые ${Math.min(PAGE, filtered.length)}`;
+  page = 0;
+  renderBatch();
+}
+
+function onSearch() {
+  const v = document.getElementById('search').value;
+  document.getElementById('clear-btn').classList.toggle('visible', v.length > 0);
+  doSearch();
+}
+
+function clearSearch() {
+  document.getElementById('search').value = '';
+  document.getElementById('clear-btn').classList.remove('visible');
+  doSearch();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-base').className = 'mode-btn' + (m==='base' ? '' : '');
+  document.getElementById('btn-min').className  = 'mode-btn m-min'  + (m==='min' ? '' : '');
+  document.getElementById('btn-rec').className  = 'mode-btn m-rec'  + (m==='rec' ? '' : '');
+  ['base','min','rec'].forEach(x => {
+    const el = document.getElementById('btn-'+x);
+    if (x === m) el.style.fontWeight = '700';
+    else el.style.fontWeight = '500';
+  });
+  page = 0; renderBatch();
+}
+
+function setFilter(sh) {
+  filterSheet = sh;
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.sheet === sh));
+  doSearch();
+}
+
+function openModal(id) {
+  const p = ALL.find(x => x.id === id);
+  if (!p) return;
+  const color = accentColor(p.sh);
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-img-ph">📦</div>
+    <div class="modal-content">
+      <span class="modal-sheet" style="background:${color}20;color:${color}">${p.sh}</span>
+      <div class="modal-name">${p.n}</div>
+      ${p.a ? `<div class="modal-art">Артикул: <strong>${p.a}</strong></div>` : ''}
+      ${p.u ? `<div class="modal-unit">Ед. изм.: ${p.u}</div>` : ''}
+      ${p.d ? `<div class="modal-desc">${p.d}</div>` : ''}
+      <div class="price-grid">
+        <div class="price-card pc-base">
+          <div class="pc-label">БАЗОВАЯ</div>
+          <div class="pc-value">${p.p != null ? fmt(p.p) : '<span class="pc-none">—</span>'}</div>
+        </div>
+        <div class="price-card pc-min">
+          <div class="pc-label">МИН</div>
+          <div class="pc-value">${p.mp != null ? fmt(p.mp) : '<span class="pc-none">—</span>'}</div>
+        </div>
+        <div class="price-card pc-rec">
+          <div class="pc-label">РЕКОМЕНД</div>
+          <div class="pc-value">${p.rp != null ? fmt(p.rp) : '<span class="pc-none">—</span>'}</div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('overlay') || e.currentTarget.tagName === 'BUTTON') {
+    document.getElementById('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+
+// Загружаем данные
+fetch('catalog.json')
+  .then(r => r.json())
+  .then(data => {
+    ALL = data;
+    filtered = ALL;
+    document.getElementById('status-txt').textContent = ALL.length.toLocaleString('ru') + ' товаров';
+    // Строим фильтры
+    const sheets = [...new Set(ALL.map(p => p.sh))].sort();
+    const fw = document.getElementById('filter-wrap');
+    sheets.forEach(sh => {
+      const c = document.createElement('div');
+      c.className = 'chip';
+      c.dataset.sheet = sh;
+      c.textContent = sh;
+      c.onclick = () => setFilter(sh);
+      fw.appendChild(c);
+    });
+    doSearch();
+  })
+  .catch(() => {
+    document.getElementById('main').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Файл catalog.json не найден</div><div class="empty-sub">Положите catalog.json рядом с index.html</div></div>`;
+    document.getElementById('status-txt').textContent = 'ошибка загрузки';
+  });
+
+setMode('base');
+</script>
+</body>
+</html>
